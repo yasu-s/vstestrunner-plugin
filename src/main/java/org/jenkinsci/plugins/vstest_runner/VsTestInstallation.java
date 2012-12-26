@@ -20,62 +20,67 @@ import hudson.model.EnvironmentSpecific;
  */
 public class VsTestInstallation extends ToolInstallation implements NodeSpecific<VsTestInstallation>, EnvironmentSpecific<VsTestInstallation> {
 
-	/** */
-	private transient String pathToVsTest;
+    /** */
+    private transient String pathToVsTest;
 
-	@DataBoundConstructor
-	public VsTestInstallation(String name, String home) {
-		super(name, home, null);
-	}
+    /**
+     *
+     * @param name
+     * @param home
+     */
+    @DataBoundConstructor
+    public VsTestInstallation(String name, String home) {
+        super(name, home, null);
+    }
 
-	/**
-	 *
-	 */
-	public VsTestInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
-		return new VsTestInstallation(getName(), translateFor(node, log));
-	}
+    /**
+     *
+     */
+    public VsTestInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
+        return new VsTestInstallation(getName(), translateFor(node, log));
+    }
 
-	/**
-	 *
-	 * @param environment
-	 * @return
-	 */
-	public VsTestInstallation forEnvironment(EnvVars environment) {
-		return new VsTestInstallation(getName(), environment.expand(getHome()));
-	}
+    /**
+     *
+     * @param environment
+     * @return
+     */
+    public VsTestInstallation forEnvironment(EnvVars environment) {
+        return new VsTestInstallation(getName(), environment.expand(getHome()));
+    }
 
-	/**
-	 * Used for backward compatibility
-	 *
-	 * @return the new object, an instance of MsBuildInstallation
-	 */
-	protected Object readResolve() {
-		if (this.pathToVsTest != null) {
-			return new VsTestInstallation(this.getName(), this.pathToVsTest);
-		}
-		return this;
-	}
+    /**
+     * Used for backward compatibility
+     *
+     * @return the new object, an instance of MsBuildInstallation
+     */
+    protected Object readResolve() {
+        if (this.pathToVsTest != null) {
+            return new VsTestInstallation(this.getName(), this.pathToVsTest);
+        }
+        return this;
+    }
 
-	/**
-	 *
-	 * @author Yasuyuki Saito
-	 */
-	@Extension
-	public static class DescriptorImpl extends ToolDescriptor<VsTestInstallation> {
+    /**
+     *
+     * @author Yasuyuki Saito
+     */
+    @Extension
+    public static class DescriptorImpl extends ToolDescriptor<VsTestInstallation> {
 
-		public String getDisplayName() {
-			return "VsTest";
-		}
+        public String getDisplayName() {
+            return Messages.VsTestInstallation_DisplayName();
+        }
 
-		@Override
-		public VsTestInstallation[] getInstallations() {
-			return Hudson.getInstance().getDescriptorByType(VsTestBuilder.DescriptorImpl.class).getInstallations();
-		}
+        @Override
+        public VsTestInstallation[] getInstallations() {
+            return Hudson.getInstance().getDescriptorByType(VsTestBuilder.DescriptorImpl.class).getInstallations();
+        }
 
-		@Override
-		public void setInstallations(VsTestInstallation... installations) {
-			Hudson.getInstance().getDescriptorByType(VsTestBuilder.DescriptorImpl.class).setInstallations(installations);
-		}
+        @Override
+        public void setInstallations(VsTestInstallation... installations) {
+            Hudson.getInstance().getDescriptorByType(VsTestBuilder.DescriptorImpl.class).setInstallations(installations);
+        }
 
     }
 }
