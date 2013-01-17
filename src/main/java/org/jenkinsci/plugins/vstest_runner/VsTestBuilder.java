@@ -109,11 +109,11 @@ public class VsTestBuilder extends Builder {
         this.inIsolation = inIsolation;
         this.useVsixExtensions = useVsixExtensions;
         this.platform = platform;
-        this.otherPlatform = otherPlatform;
+        this.otherPlatform = PLATFORM_OTHER.equals(this.platform) ? otherPlatform : "";
         this.framework = framework;
-        this.otherFramework = otherFramework;
+        this.otherFramework = FRAMEWORK_OTHER.equals(this.framework) ? otherFramework : "";
         this.logger = logger;
-        this.otherLogger = otherLogger;
+        this.otherLogger = LOGGER_OTHER.equals(this.logger) ? otherLogger : "";
         this.cmdLineArgs = cmdLineArgs;
         this.failBuild = failBuild;
     }
@@ -150,7 +150,7 @@ public class VsTestBuilder extends Builder {
         return platform;
     }
 
-    public String getOtherplatform() {
+    public String getOtherPlatform() {
         return otherPlatform;
     }
 
