@@ -5,5 +5,5 @@ VSTest.Console.exe execute plugin.
 
 Similar plugin
 -------
-MSTestRunner Plugin
+MSTestRunner Plugin  
 https://wiki.jenkins-ci.org/display/JENKINS/MSTestRunner+Plugin

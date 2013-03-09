@@ -75,6 +75,7 @@
                                  onclick="$('platform.otherPlatform').disabled=false" />
                 ${%Platform.Other}
             </label>
+            <st:nbsp /><st:nbsp /><st:nbsp /><st:nbsp />
             <j:choose>
                 <j:when test="${instance.platform == 'Other'}">
                     <f:textbox name="VsTestBuilder.otherPlatform" value="${instance.otherPlatform}" id="platform.otherPlatform" />
@@ -87,7 +88,7 @@
 
             <label>
                  <f:radio name="VsTestBuilder.platform" value="" id="platform.None"
-                         checked="${instance.platform == ''}"
+                         checked="${empty instance.platform}"
                          onclick="$('platform.otherPlatform').disabled=true" />
                  ${%Platform.None}
             </label>
@@ -126,6 +127,7 @@
                          onclick="$('framework.otherFramework').disabled=false" />
                 ${%Framework.Other}
             </label>
+            <st:nbsp /><st:nbsp /><st:nbsp /><st:nbsp />
             <j:choose>
                 <j:when test="${instance.framework == 'Other'}">
                     <f:textbox name="VsTestBuilder.otherFramework" value="${instance.otherFramework}" id="framework.otherFramework" />
@@ -138,7 +140,7 @@
 
             <label>
                 <f:radio name="VsTestBuilder.framework" value="" id="framework.None"
-                         checked="${instance.framework == ''}"
+                         checked="${empty instance.framework}"
                          onclick="$('framework.otherFramework').disabled=true" />
                 ${%Framework.None}
             </label>
@@ -149,7 +151,7 @@
             <br />
             <label>
                 <f:radio name="VsTestBuilder.logger" value="trx" id="logger.Trx"
-                         checked="${instance.logger == 'trx'}"
+                         checked="${instance.logger == 'trx' || instance.logger == null}"
                          onclick="$('logger.otherLogger').disabled=true" />
                 ${%Logger.Trx}
             </label>
@@ -161,6 +163,7 @@
                          onclick="$('logger.otherLogger').disabled=false" />
                 ${%Logger.Other}
             </label>
+            <st:nbsp /><st:nbsp /><st:nbsp /><st:nbsp />
             <j:choose>
                 <j:when test="${instance.logger == 'Other'}">
                     <f:textbox name="VsTestBuilder.otherLogger" value="${instance.otherLogger}" id="logger.otherLogger" />
