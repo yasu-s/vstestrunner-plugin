@@ -100,22 +100,22 @@ public class VsTestBuilder extends Builder {
                         ,boolean enablecodecoverage, boolean inIsolation, boolean useVsixExtensions, String platform, String otherPlatform
                         ,String framework, String otherFramework, String logger, String otherLogger
                         ,String cmdLineArgs, boolean failBuild) {
-        this.vsTestName = vsTestName;
-        this.testFiles = testFiles;
-        this.settings = settings;
-        this.tests = tests;
-        this.testCaseFilter = testCaseFilter;
+        this.vsTestName         = vsTestName;
+        this.testFiles          = testFiles;
+        this.settings           = settings;
+        this.tests              = tests;
+        this.testCaseFilter     = testCaseFilter;
         this.enablecodecoverage = enablecodecoverage;
-        this.inIsolation = inIsolation;
-        this.useVsixExtensions = useVsixExtensions;
-        this.platform = platform;
-        this.otherPlatform = PLATFORM_OTHER.equals(this.platform) ? otherPlatform : "";
-        this.framework = framework;
-        this.otherFramework = FRAMEWORK_OTHER.equals(this.framework) ? otherFramework : "";
-        this.logger = logger;
-        this.otherLogger = LOGGER_OTHER.equals(this.logger) ? otherLogger : "";
-        this.cmdLineArgs = cmdLineArgs;
-        this.failBuild = failBuild;
+        this.inIsolation        = inIsolation;
+        this.useVsixExtensions  = useVsixExtensions;
+        this.platform           = platform;
+        this.otherPlatform      = PLATFORM_OTHER.equals(this.platform) ? otherPlatform : "";
+        this.framework          = framework;
+        this.otherFramework     = FRAMEWORK_OTHER.equals(this.framework) ? otherFramework : "";
+        this.logger             = logger;
+        this.otherLogger        = LOGGER_OTHER.equals(this.logger) ? otherLogger : "";
+        this.cmdLineArgs        = cmdLineArgs;
+        this.failBuild          = failBuild;
     }
 
     public String getVsTestName() {
@@ -296,12 +296,28 @@ public class VsTestBuilder extends Builder {
         if (!isNullOrSpace(loggerArg))
             args.add(convertArgument("Logger", loggerArg));
 
+        // Manual Command Line String
+        if (!isNullOrSpace(cmdLineArgs))
+            args.add(replaceMacro(cmdLineArgs, env, build));
+
         // VSTest run.
         boolean r = execVsTest(args, build, launcher, listener, env);
 
         return r;
     }
 
+    /**
+     *
+     * @param value
+     * @param env
+     * @param build
+     * @return
+     */
+    private String replaceMacro(String value, EnvVars env, AbstractBuild<?, ?> build) {
+        String result = Util.replaceMacro(value, env);
+        result = Util.replaceMacro(result, build.getBuildVariables());
+        return result;
+    }
 
     /**
      *
