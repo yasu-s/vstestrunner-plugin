@@ -20,6 +20,7 @@ import hudson.tasks.Builder;
 import hudson.tools.ToolInstallation;
 import hudson.util.ArgumentListBuilder;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -252,20 +253,20 @@ public class VsTestBuilder extends Builder {
         args.add(pathToVsTest);
 
         // Tareget dll path
-        if (!isNullOrSpace(testFiles))
+        if (!StringUtils.isBlank(testFiles))
             args.addAll(getTestFilesArguments(build, env));
 
         // Run tests with additional settings such as data collectors.
-        if (!isNullOrSpace(settings))
-            args.add(convertArgumentWithQuote("Settings", settings));
+        if (!StringUtils.isBlank(settings))
+            args.add(convertArgumentWithQuote("Settings", replaceMacro(settings, env, build)));
 
         // Run tests with names that match the provided values.
-        if (!isNullOrSpace(tests))
-            args.add(convertArgument("Tests", tests));
+        if (!StringUtils.isBlank(tests))
+            args.add(convertArgument("Tests", replaceMacro(tests, env, build)));
 
         // Run tests that match the given expression.
-        if (!isNullOrSpace(testCaseFilter))
-            args.add(convertArgumentWithQuote("TestCaseFilter", testCaseFilter));
+        if (!StringUtils.isBlank(testCaseFilter))
+            args.add(convertArgumentWithQuote("TestCaseFilter", replaceMacro(testCaseFilter, env, build)));
 
         // Enables data diagnostic adapter CodeCoverage in the test run.
         if (enablecodecoverage)
@@ -282,22 +283,22 @@ public class VsTestBuilder extends Builder {
             args.add("/UseVsixExtensions:false");
 
         // Target platform architecture to be used for test execution.
-        String platformArg = getPlatformArgument();
-        if (!isNullOrSpace(platformArg))
+        String platformArg = getPlatformArgument(env, build);
+        if (!StringUtils.isBlank(platformArg))
             args.add(convertArgument("Platform", platformArg));
 
         // Target .NET Framework version to be used for test execution.
-        String frameworkArg = getFrameworkArgument();
-        if (!isNullOrSpace(frameworkArg))
+        String frameworkArg = getFrameworkArgument(env, build);
+        if (!StringUtils.isBlank(frameworkArg))
             args.add(convertArgument("Framework", frameworkArg));
 
         // Specify a logger for test results.
-        String loggerArg = getLoggerArgument();
-        if (!isNullOrSpace(loggerArg))
+        String loggerArg = getLoggerArgument(env, build);
+        if (!StringUtils.isBlank(loggerArg))
             args.add(convertArgument("Logger", loggerArg));
 
         // Manual Command Line String
-        if (!isNullOrSpace(cmdLineArgs))
+        if (!StringUtils.isBlank(cmdLineArgs))
             args.add(replaceMacro(cmdLineArgs, env, build));
 
         // VSTest run.
@@ -373,10 +374,9 @@ public class VsTestBuilder extends Builder {
 
         while (testFilesToknzr.hasMoreTokens()) {
             String testFile = testFilesToknzr.nextToken();
-            testFile = Util.replaceMacro(testFile, env);
-            testFile = Util.replaceMacro(testFile, build.getBuildVariables());
+            testFile = replaceMacro(testFile, env, build);
 
-            if (!isNullOrSpace(testFile)) {
+            if (!StringUtils.isBlank(testFile)) {
                 args.add(appendQuote(testFile));
             }
         }
@@ -386,39 +386,45 @@ public class VsTestBuilder extends Builder {
 
     /**
      *
+     * @param env
+     * @param build
      * @return
      */
-    private String getPlatformArgument() {
+    private String getPlatformArgument(EnvVars env, AbstractBuild<?, ?> build) {
         if (PLATFORM_X86.equals(platform) || PLATFORM_X64.equals(platform) || PLATFORM_ARM.equals(platform))
             return platform;
         else if (PLATFORM_OTHER.equals(platform))
-            return otherPlatform;
+            return replaceMacro(otherPlatform, env, build);
         else
             return null;
     }
 
     /**
      *
+     * @param env
+     * @param build
      * @return
      */
-    private String getFrameworkArgument() {
+    private String getFrameworkArgument(EnvVars env, AbstractBuild<?, ?> build) {
         if (FRAMEWORK_35.equals(framework) || FRAMEWORK_40.equals(framework) || FRAMEWORK_45.equals(framework))
             return framework;
         else if (FRAMEWORK_OTHER.equals(framework))
-            return otherFramework;
+            return replaceMacro(otherFramework, env, build);
         else
             return null;
     }
 
     /**
      *
+     * @param env
+     * @param build
      * @return
      */
-    private String getLoggerArgument() {
+    private String getLoggerArgument(EnvVars env, AbstractBuild<?, ?> build) {
         if (LOGGER_TRX.equals(logger))
             return logger;
         else if (LOGGER_OTHER.equals(logger))
-            return otherLogger;
+            return replaceMacro(otherLogger, env, build);
         else
             return null;
     }
@@ -501,15 +507,6 @@ public class VsTestBuilder extends Builder {
      */
     private String appendQuote(String value) {
         return String.format("\"%s\"", value);
-    }
-
-    /**
-     * Null or Space
-     * @param value
-     * @return
-     */
-    private boolean isNullOrSpace(String value) {
-        return (value == null || value.trim().length() == 0);
     }
 
     /**
