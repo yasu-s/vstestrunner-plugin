@@ -12,11 +12,12 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Computer;
-import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.tasks.Builder;
+import hudson.tasks.BuildStepDescriptor;
 import hudson.tools.ToolInstallation;
 import hudson.util.ArgumentListBuilder;
 
@@ -193,7 +194,7 @@ public class VsTestBuilder extends Builder {
     }
 
     @Override
-    public Descriptor<Builder> getDescriptor() {
+    public DescriptorImpl getDescriptor() {
          return DESCRIPTOR;
     }
 
@@ -207,7 +208,7 @@ public class VsTestBuilder extends Builder {
      *
      * @author Yasuyuki Saito
      */
-    public static final class DescriptorImpl extends Descriptor<Builder> {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         @CopyOnWrite
         private volatile VsTestInstallation[] installations = new VsTestInstallation[0];
@@ -215,6 +216,10 @@ public class VsTestBuilder extends Builder {
         DescriptorImpl() {
             super(VsTestBuilder.class);
             load();
+        }
+        
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
+            return true;
         }
 
         public String getDisplayName() {
