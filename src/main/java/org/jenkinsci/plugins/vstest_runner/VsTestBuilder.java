@@ -15,6 +15,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Computer;
+import hudson.model.EnvironmentContributingAction;
 import hudson.model.Result;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
@@ -462,7 +463,10 @@ public class VsTestBuilder extends Builder {
         listener.getLogger().println("Executing VSTest: " + cmdExecArgs.toStringWithQuote());
 
         try {
-            int r = launcher.launch().cmds(cmdExecArgs).envs(env).stdout(listener).pwd(pwd).join();
+            VsTestListenerDecorator parserListener = new VsTestListenerDecorator(listener);
+            int r = launcher.launch().cmds(cmdExecArgs).envs(env).stdout(parserListener).pwd(pwd).join();
+
+            build.addAction(new AddVsTestEnvVarsAction(parserListener.getTrxFile(), parserListener.getCoverageFile()));
 
             if (failBuild)
                 return (r == 0);
@@ -526,5 +530,43 @@ public class VsTestBuilder extends Builder {
             buf.append(arg);
         }
         return buf.toString();
+    }
+
+    private static class AddVsTestEnvVarsAction implements EnvironmentContributingAction {
+
+        private final static String TRX_ENV = "VSTEST_RESULT_TRX";
+        private final static String COVERAGE_ENV = "VSTEST_RESULT_COVERAGE";
+
+        private final String trxEnv;
+        private final String coverageEnv;
+
+        public AddVsTestEnvVarsAction(String trxEnv, String coverageEnv) {
+            this.trxEnv = trxEnv;
+            this.coverageEnv = coverageEnv;
+        }
+
+        public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
+            if (trxEnv != null)
+            {
+                env.put(TRX_ENV, trxEnv);
+            }
+
+            if (coverageEnv != null)
+            {
+                env.put(COVERAGE_ENV, coverageEnv);
+            }
+        }
+
+        public String getDisplayName() {
+            return "Add VSTestRunner Environment Variables to Build Environment";
+        }
+
+        public String getIconFileName() {
+            return null;
+        }
+
+        public String getUrlName() {
+            return null;
+        }
     }
 }
