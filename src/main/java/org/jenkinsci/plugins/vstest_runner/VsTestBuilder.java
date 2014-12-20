@@ -21,6 +21,7 @@ import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tools.ToolInstallation;
 import hudson.util.ArgumentListBuilder;
+import java.nio.file.Paths;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -436,6 +437,16 @@ public class VsTestBuilder extends Builder {
     }
 
     /**
+     * @param base
+     * @param path
+     * @return the relative path of 'path'  
+     * @throws InterruptedException
+     * @throws IOException 
+     */
+    private String relativize(FilePath base, String path) throws InterruptedException, IOException {
+        return base.toURI().relativize(new java.io.File(path).toURI()).getPath();
+    }
+    /**
      *
      * @param args
      * @param build
@@ -466,7 +477,10 @@ public class VsTestBuilder extends Builder {
             VsTestListenerDecorator parserListener = new VsTestListenerDecorator(listener);
             int r = launcher.launch().cmds(cmdExecArgs).envs(env).stdout(parserListener).pwd(pwd).join();
 
-            build.addAction(new AddVsTestEnvVarsAction(parserListener.getTrxFile(), parserListener.getCoverageFile()));
+            String trxPathRelativeToWorkspace = relativize(build.getWorkspace(), parserListener.getTrxFile());
+            String coveragePathRelativeToWorkspace = relativize(build.getWorkspace(), parserListener.getCoverageFile());
+            
+            build.addAction(new AddVsTestEnvVarsAction(trxPathRelativeToWorkspace, coveragePathRelativeToWorkspace));
 
             if (failBuild)
                 return (r == 0);
