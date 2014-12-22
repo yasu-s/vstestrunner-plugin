@@ -21,9 +21,11 @@ import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tools.ToolInstallation;
 import hudson.util.ArgumentListBuilder;
+import java.io.File;
 import java.nio.file.Paths;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.tools.ant.types.FileSet;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -32,36 +34,55 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class VsTestBuilder extends Builder {
 
-    /** Platform:x86 */
+    /**
+     * Platform:x86
+     */
     private static final String PLATFORM_X86 = "x86";
 
-    /** Platform:x64 */
+    /**
+     * Platform:x64
+     */
     private static final String PLATFORM_X64 = "x64";
 
-    /** Platform:ARM */
+    /**
+     * Platform:ARM
+     */
     private static final String PLATFORM_ARM = "ARM";
 
-    /** Platform:Other */
+    /**
+     * Platform:Other
+     */
     private static final String PLATFORM_OTHER = "Other";
 
-    /** .NET Framework 3.5 */
+    /**
+     * .NET Framework 3.5
+     */
     private static final String FRAMEWORK_35 = "framework35";
 
-    /** .NET Framework 4.0 */
+    /**
+     * .NET Framework 4.0
+     */
     private static final String FRAMEWORK_40 = "framework40";
 
-    /** .NET Framework 4.5 */
+    /**
+     * .NET Framework 4.5
+     */
     private static final String FRAMEWORK_45 = "framework45";
 
-    /** .NET Framework Other */
+    /**
+     * .NET Framework Other
+     */
     private static final String FRAMEWORK_OTHER = "Other";
 
-    /** Logger TRX */
+    /**
+     * Logger TRX
+     */
     private static final String LOGGER_TRX = "trx";
 
-    /** Logger Other */
+    /**
+     * Logger Other
+     */
     private static final String LOGGER_OTHER = "Other";
-
 
     private final String vsTestName;
     private final String testFiles;
@@ -100,26 +121,23 @@ public class VsTestBuilder extends Builder {
      * @param failBuild
      */
     @DataBoundConstructor
-    public VsTestBuilder(String vsTestName, String testFiles, String settings, String tests, String testCaseFilter
-                        ,boolean enablecodecoverage, boolean inIsolation, boolean useVsixExtensions, String platform, String otherPlatform
-                        ,String framework, String otherFramework, String logger, String otherLogger
-                        ,String cmdLineArgs, boolean failBuild) {
-        this.vsTestName         = vsTestName;
-        this.testFiles          = testFiles;
-        this.settings           = settings;
-        this.tests              = tests;
-        this.testCaseFilter     = testCaseFilter;
+    public VsTestBuilder(String vsTestName, String testFiles, String settings, String tests, String testCaseFilter, boolean enablecodecoverage, boolean inIsolation, boolean useVsixExtensions, String platform, String otherPlatform, String framework, String otherFramework, String logger, String otherLogger, String cmdLineArgs, boolean failBuild) {
+        this.vsTestName = vsTestName;
+        this.testFiles = testFiles;
+        this.settings = settings;
+        this.tests = tests;
+        this.testCaseFilter = testCaseFilter;
         this.enablecodecoverage = enablecodecoverage;
-        this.inIsolation        = inIsolation;
-        this.useVsixExtensions  = useVsixExtensions;
-        this.platform           = platform;
-        this.otherPlatform      = PLATFORM_OTHER.equals(this.platform) ? otherPlatform : "";
-        this.framework          = framework;
-        this.otherFramework     = FRAMEWORK_OTHER.equals(this.framework) ? otherFramework : "";
-        this.logger             = logger;
-        this.otherLogger        = LOGGER_OTHER.equals(this.logger) ? otherLogger : "";
-        this.cmdLineArgs        = cmdLineArgs;
-        this.failBuild          = failBuild;
+        this.inIsolation = inIsolation;
+        this.useVsixExtensions = useVsixExtensions;
+        this.platform = platform;
+        this.otherPlatform = PLATFORM_OTHER.equals(this.platform) ? otherPlatform : "";
+        this.framework = framework;
+        this.otherFramework = FRAMEWORK_OTHER.equals(this.framework) ? otherFramework : "";
+        this.logger = logger;
+        this.otherLogger = LOGGER_OTHER.equals(this.logger) ? otherLogger : "";
+        this.cmdLineArgs = cmdLineArgs;
+        this.failBuild = failBuild;
     }
 
     public String getVsTestName() {
@@ -197,7 +215,7 @@ public class VsTestBuilder extends Builder {
 
     @Override
     public DescriptorImpl getDescriptor() {
-         return DESCRIPTOR;
+        return DESCRIPTOR;
     }
 
     /**
@@ -219,7 +237,7 @@ public class VsTestBuilder extends Builder {
             super(VsTestBuilder.class);
             load();
         }
-        
+
         public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             return true;
         }
@@ -256,57 +274,70 @@ public class VsTestBuilder extends Builder {
 
         // VsTest.console.exe path.
         String pathToVsTest = getVsTestPath(launcher, listener, env);
-        if (pathToVsTest == null) return false;
+        if (pathToVsTest == null) {
+            return false;
+        }
         args.add(pathToVsTest);
 
-        // Tareget dll path
-        if (!StringUtils.isBlank(testFiles))
+        // Target dll path
+        if (!StringUtils.isBlank(testFiles)) {
             args.addAll(getTestFilesArguments(build, env));
+        }
 
         // Run tests with additional settings such as data collectors.
-        if (!StringUtils.isBlank(settings))
+        if (!StringUtils.isBlank(settings)) {
             args.add(convertArgumentWithQuote("Settings", replaceMacro(settings, env, build)));
+        }
 
         // Run tests with names that match the provided values.
-        if (!StringUtils.isBlank(tests))
+        if (!StringUtils.isBlank(tests)) {
             args.add(convertArgument("Tests", replaceMacro(tests, env, build)));
+        }
 
         // Run tests that match the given expression.
-        if (!StringUtils.isBlank(testCaseFilter))
+        if (!StringUtils.isBlank(testCaseFilter)) {
             args.add(convertArgumentWithQuote("TestCaseFilter", replaceMacro(testCaseFilter, env, build)));
+        }
 
         // Enables data diagnostic adapter CodeCoverage in the test run.
-        if (enablecodecoverage)
+        if (enablecodecoverage) {
             args.add("/Enablecodecoverage");
+        }
 
         // Runs the tests in an isolated process.
-        if (inIsolation)
+        if (inIsolation) {
             args.add("/InIsolation");
+        }
 
         // This makes vstest.console.exe process use or skip the VSIX extensions installed (if any) in the test run.
-        if (useVsixExtensions)
+        if (useVsixExtensions) {
             args.add("/UseVsixExtensions:true");
-        else
+        } else {
             args.add("/UseVsixExtensions:false");
+        }
 
         // Target platform architecture to be used for test execution.
         String platformArg = getPlatformArgument(env, build);
-        if (!StringUtils.isBlank(platformArg))
+        if (!StringUtils.isBlank(platformArg)) {
             args.add(convertArgument("Platform", platformArg));
+        }
 
         // Target .NET Framework version to be used for test execution.
         String frameworkArg = getFrameworkArgument(env, build);
-        if (!StringUtils.isBlank(frameworkArg))
+        if (!StringUtils.isBlank(frameworkArg)) {
             args.add(convertArgument("Framework", frameworkArg));
+        }
 
         // Specify a logger for test results.
         String loggerArg = getLoggerArgument(env, build);
-        if (!StringUtils.isBlank(loggerArg))
+        if (!StringUtils.isBlank(loggerArg)) {
             args.add(convertArgument("Logger", loggerArg));
+        }
 
         // Manual Command Line String
-        if (!StringUtils.isBlank(cmdLineArgs))
+        if (!StringUtils.isBlank(cmdLineArgs)) {
             args.add(replaceMacro(cmdLineArgs, env, build));
+        }
 
         // VSTest run.
         boolean r = execVsTest(args, build, launcher, listener, env);
@@ -365,7 +396,6 @@ public class VsTestBuilder extends Builder {
         }
     }
 
-
     /**
      *
      * @param build
@@ -384,11 +414,30 @@ public class VsTestBuilder extends Builder {
             testFile = replaceMacro(testFile, env, build);
 
             if (!StringUtils.isBlank(testFile)) {
-                args.add(appendQuote(testFile));
+
+                for (String file : expandFileSet(build, testFile)) {
+                    args.add(appendQuote(testFile));
+                }
             }
         }
 
         return args;
+    }
+
+    private String[] expandFileSet(AbstractBuild<?, ?> build, String pattern) {
+        String[] result =  new String[] { pattern };
+        FileSet fileSet = new FileSet();
+        org.apache.tools.ant.Project project = new org.apache.tools.ant.Project();
+        fileSet.setProject(project);
+        try {
+        fileSet.setDir(new File(build.getWorkspace().toURI().getPath()));
+        fileSet.setIncludes(pattern);
+        } catch (IOException ioe) {
+            return result;
+        } catch (InterruptedException intE) {
+            return result;
+        }
+        return fileSet.getDirectoryScanner(project).getIncludedFiles();
     }
 
     /**
@@ -398,12 +447,13 @@ public class VsTestBuilder extends Builder {
      * @return
      */
     private String getPlatformArgument(EnvVars env, AbstractBuild<?, ?> build) {
-        if (PLATFORM_X86.equals(platform) || PLATFORM_X64.equals(platform) || PLATFORM_ARM.equals(platform))
+        if (PLATFORM_X86.equals(platform) || PLATFORM_X64.equals(platform) || PLATFORM_ARM.equals(platform)) {
             return platform;
-        else if (PLATFORM_OTHER.equals(platform))
+        } else if (PLATFORM_OTHER.equals(platform)) {
             return replaceMacro(otherPlatform, env, build);
-        else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -413,12 +463,13 @@ public class VsTestBuilder extends Builder {
      * @return
      */
     private String getFrameworkArgument(EnvVars env, AbstractBuild<?, ?> build) {
-        if (FRAMEWORK_35.equals(framework) || FRAMEWORK_40.equals(framework) || FRAMEWORK_45.equals(framework))
+        if (FRAMEWORK_35.equals(framework) || FRAMEWORK_40.equals(framework) || FRAMEWORK_45.equals(framework)) {
             return framework;
-        else if (FRAMEWORK_OTHER.equals(framework))
+        } else if (FRAMEWORK_OTHER.equals(framework)) {
             return replaceMacro(otherFramework, env, build);
-        else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -428,24 +479,26 @@ public class VsTestBuilder extends Builder {
      * @return
      */
     private String getLoggerArgument(EnvVars env, AbstractBuild<?, ?> build) {
-        if (LOGGER_TRX.equals(logger))
+        if (LOGGER_TRX.equals(logger)) {
             return logger;
-        else if (LOGGER_OTHER.equals(logger))
+        } else if (LOGGER_OTHER.equals(logger)) {
             return replaceMacro(otherLogger, env, build);
-        else
+        } else {
             return null;
+        }
     }
 
     /**
      * @param base
      * @param path
-     * @return the relative path of 'path'  
+     * @return the relative path of 'path'
      * @throws InterruptedException
-     * @throws IOException 
+     * @throws IOException
      */
     private String relativize(FilePath base, String path) throws InterruptedException, IOException {
         return base.toURI().relativize(new java.io.File(path).toURI()).getPath();
     }
+
     /**
      *
      * @param args
@@ -479,14 +532,15 @@ public class VsTestBuilder extends Builder {
 
             String trxPathRelativeToWorkspace = relativize(build.getWorkspace(), parserListener.getTrxFile());
             String coveragePathRelativeToWorkspace = relativize(build.getWorkspace(), parserListener.getCoverageFile());
-            
+
             build.addAction(new AddVsTestEnvVarsAction(trxPathRelativeToWorkspace, coveragePathRelativeToWorkspace));
 
-            if (failBuild)
+            if (failBuild) {
                 return (r == 0);
-            else {
-                if (r != 0)
+            } else {
+                if (r != 0) {
                     build.setResult(Result.UNSTABLE);
+                }
                 return true;
             }
         } catch (IOException e) {
@@ -495,7 +549,9 @@ public class VsTestBuilder extends Builder {
             return false;
         } finally {
             try {
-                if (tmpDir != null) tmpDir.delete();
+                if (tmpDir != null) {
+                    tmpDir.delete();
+                }
             } catch (IOException e) {
                 Util.displayIOException(e, listener);
                 e.printStackTrace(listener.fatalError("temporary file delete failed"));
@@ -540,7 +596,9 @@ public class VsTestBuilder extends Builder {
     private String concatString(List<String> args) {
         StringBuilder buf = new StringBuilder();
         for (String arg : args) {
-            if(buf.length() > 0)  buf.append(' ');
+            if (buf.length() > 0) {
+                buf.append(' ');
+            }
             buf.append(arg);
         }
         return buf.toString();
@@ -560,13 +618,11 @@ public class VsTestBuilder extends Builder {
         }
 
         public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
-            if (trxEnv != null)
-            {
+            if (trxEnv != null) {
                 env.put(TRX_ENV, trxEnv);
             }
 
-            if (coverageEnv != null)
-            {
+            if (coverageEnv != null) {
                 env.put(COVERAGE_ENV, coverageEnv);
             }
         }
