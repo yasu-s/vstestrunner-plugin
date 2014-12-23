@@ -61,4 +61,24 @@ public class FileSetTest {
         assertTrue(s.contains("no file matches the pattern **\\*.Tests"));
         //String content = build.getWorkspace().child("AssemblyVersion.cs").readToString();
     }
+
+    @Test
+    public void testResolveFileSet_someMatch() throws InterruptedException, IOException, Exception {
+
+        FreeStyleProject project = j.createFreeStyleProject();
+        VsTestBuilder builder = new VsTestBuilder("default", "**\\*.Tests.dll", "", "", "", true, true, false, "", "", "", "", "trx", "", "", true);
+        project.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                build.getWorkspace().child("aaa\\aaa.Tests.dll").write("La donna è mobile, qual più mal vento", "UTF-8");
+                return true;
+            }
+        });
+        project.getBuildersList().add(builder);
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        //build.getBuildStatusSummary().message;
+        assertTrue(build.getResult() == Result.FAILURE);
+        String s = FileUtils.readFileToString(build.getLogFile());
+        //assertTrue(s.contains("no file matches the pattern **\\*.Tests.dll"));
+        //String content = build.getWorkspace().child("AssemblyVersion.cs").readToString();
+    }
 }
