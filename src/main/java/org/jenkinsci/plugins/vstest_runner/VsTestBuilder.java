@@ -281,7 +281,12 @@ public class VsTestBuilder extends Builder {
 
         // Target dll path
         if (!StringUtils.isBlank(testFiles)) {
-            args.addAll(getTestFilesArguments(build, env));
+            List<String> targets = getTestFilesArguments(build, env);
+            if (targets.size() == 0) {
+                listener.getLogger().print("no file matches the pattern " + this.testFiles);
+                return !this.failBuild;
+            }
+            args.addAll(targets);
         }
 
         // Run tests with additional settings such as data collectors.
@@ -425,13 +430,13 @@ public class VsTestBuilder extends Builder {
     }
 
     private String[] expandFileSet(AbstractBuild<?, ?> build, String pattern) {
-        String[] result =  new String[] { pattern };
+        String[] result = new String[]{pattern};
         FileSet fileSet = new FileSet();
         org.apache.tools.ant.Project project = new org.apache.tools.ant.Project();
         fileSet.setProject(project);
         try {
-        fileSet.setDir(new File(build.getWorkspace().toURI().getPath()));
-        fileSet.setIncludes(pattern);
+            fileSet.setDir(new File(build.getWorkspace().toURI().getPath()));
+            fileSet.setIncludes(pattern);
         } catch (IOException ioe) {
             return result;
         } catch (InterruptedException intE) {
@@ -530,8 +535,17 @@ public class VsTestBuilder extends Builder {
             VsTestListenerDecorator parserListener = new VsTestListenerDecorator(listener);
             int r = launcher.launch().cmds(cmdExecArgs).envs(env).stdout(parserListener).pwd(pwd).join();
 
-            String trxPathRelativeToWorkspace = relativize(build.getWorkspace(), parserListener.getTrxFile());
-            String coveragePathRelativeToWorkspace = relativize(build.getWorkspace(), parserListener.getCoverageFile());
+            String trxFullPath = parserListener.getTrxFile();
+            String trxPathRelativeToWorkspace = null;
+            String coverageFullPath = parserListener.getCoverageFile();
+            String coveragePathRelativeToWorkspace = null;
+
+            if (trxFullPath != null) {
+                trxPathRelativeToWorkspace = relativize(build.getWorkspace(), trxFullPath);
+            }
+            if (coverageFullPath != null) {
+                coveragePathRelativeToWorkspace = relativize(build.getWorkspace(), parserListener.getCoverageFile());
+            }
 
             build.addAction(new AddVsTestEnvVarsAction(trxPathRelativeToWorkspace, coveragePathRelativeToWorkspace));
 
