@@ -430,19 +430,13 @@ public class VsTestBuilder extends Builder {
     }
 
     private String[] expandFileSet(AbstractBuild<?, ?> build, String pattern) {
-        String[] result = new String[]{pattern};
-        FileSet fileSet = new FileSet();
-        org.apache.tools.ant.Project project = new org.apache.tools.ant.Project();
-        fileSet.setProject(project);
+        List<String> fileNames = new ArrayList<String>();
         try {
-            fileSet.setDir(new File(build.getWorkspace().toURI().getPath()));
-            fileSet.setIncludes(pattern);
-        } catch (IOException ioe) {
-            return result;
-        } catch (InterruptedException intE) {
-            return result;
-        }
-        return fileSet.getDirectoryScanner(project).getIncludedFiles();
+        for (FilePath x: build.getWorkspace().list(pattern))
+            fileNames.add(x.getRemote());
+        } catch (IOException ioe) {}
+        catch (InterruptedException inte) {}
+        return fileNames.toArray(new String[fileNames.size()]);
     }
 
     /**
