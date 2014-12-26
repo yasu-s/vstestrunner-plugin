@@ -421,7 +421,7 @@ public class VsTestBuilder extends Builder {
             if (!StringUtils.isBlank(testFile)) {
 
                 for (String file : expandFileSet(build, testFile)) {
-                    args.add(appendQuote(testFile));
+                    args.add(appendQuote(file));
                 }
             }
         }
